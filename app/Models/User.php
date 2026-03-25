@@ -11,7 +11,7 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable; 
 
-    protected $fillable = ['login', 'email', 'password'];
+    protected $fillable = ['username', 'email', 'password'];
     protected $hidden = ['password', 'remember_token'];
 
     public function favorites()
