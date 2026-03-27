@@ -38,21 +38,21 @@ class TenderController extends Controller
     return response()->json($tenders);
 }
 
+public function store(Request $request)
+{   
+    $data = $request->validate([
+        
+        'category'    => 'required|string|in:Infrastructure,Technology,Sustainability,Supplies',
+        'title'       => 'required|string|max:255',
+        'description' => 'required|string',
+        'budget'      => 'required|numeric', 
+        'location'    => 'required|string',
+        'deadline'    => 'required|date',
+    ]);
 
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'category' => 'required|string',
-            'title' => 'required|string',
-            'description' => 'required|string',
-            'budget' => 'required|string',
-            'location' => 'required|string',
-            'deadline' => 'required|date',
-        ]);
-
-        $tender = Tender::create($data);
-        return response()->json($tender, 201);
-    }
+    $tender = Tender::create($data);
+    return response()->json($tender, 201);
+}
 
     public function show($id)
     {
