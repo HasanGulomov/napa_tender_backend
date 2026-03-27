@@ -7,14 +7,12 @@ use Illuminate\Http\Request;
 
 class TenderController extends Controller
 {
-    /**
-     * Tenderlar ro'yxatini chiqarish va filtrlash (GET)
-     */
+    
     public function index(Request $request)
     {
         $query = Tender::query();
 
-        // Filtrlash mantiqi
+        
         $query->when($request->category, fn($q) => 
             $q->where('category', $request->category)
         )
@@ -34,7 +32,7 @@ class TenderController extends Controller
             $q->where('budget', '<=', $request->max_budget)
         );
 
-        // Yangilarini birinchi chiqarish va sahifalash
+        
         $tenders = $query->latest()->paginate(10)->appends($request->query());
 
         return response()->json($tenders);
