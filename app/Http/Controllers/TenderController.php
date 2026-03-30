@@ -40,12 +40,12 @@ class TenderController extends Controller
 {
     $query = Tender::query(); 
 
-    
     $query->when($request->category, function($q, $v) {
         $categories = is_array($v) ? $v : array_map('trim', explode(',', $v));
         $q->whereIn('category', $categories);
     });
 
+  
     $query->when($request->region, function ($q, $v) {
         $regions = is_array($v) ? $v : array_map('trim', explode(',', $v));
         $q->where(function ($subQuery) use ($regions) {
@@ -55,21 +55,18 @@ class TenderController extends Controller
         });
     });
 
-    
     $query->when($request->source, function($q, $v) {
         $sources = is_array($v) ? $v : array_map('trim', explode(',', $v));
         $q->whereIn('source', $sources);
     });
 
-   $query->when($request->min_budget, function($q, $v) {
-    $q->whereRaw('CAST(budget AS UNSIGNED) >= ?', [(int)$v]);
-});
+    $query->when($request->min_budget, function($q, $v) {
+        $q->whereRaw('CAST(budget AS UNSIGNED) >= ?', [(int)$v]);
+    });
 
-
-$query->when($request->max_budget, function($q, $v) {
-    $q->whereRaw('CAST(budget AS UNSIGNED) <= ?', [(int)$v]);
-});
-
+    $query->when($request->max_budget, function($q, $v) {
+        $q->whereRaw('CAST(budget AS UNSIGNED) <= ?', [(int)$v]);
+    });
 
     $query->when($request->closingDate, fn($q, $v) => $q->whereDate('deadline', $v));
 
@@ -77,6 +74,7 @@ $query->when($request->max_budget, function($q, $v) {
 
     return response()->json($query->get());
 }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
