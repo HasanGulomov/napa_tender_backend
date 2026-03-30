@@ -9,69 +9,79 @@ use App\Http\Requests\TenderFilterRequest;
 
 class TenderController extends Controller
 {
-  
-    public function index()
+    
+    public function index(Request $request)
     {
-        $tenders = Tender::latest()->paginate(10);
+        
+        $perPage = $request->query('per_page', 10);
+        
+        $tenders = Tender::latest()->paginate($perPage);
+        
         return response()->json($tenders);
     }
 
-
+    
     public function search(Request $request)
     {
         $request->validate(['search' => 'required|string']);
         
+        $perPage = $request->query('per_page', 10);
+        
         $tenders = Tender::where('title', 'like', '%' . $request->search . '%')
             ->latest()
-            ->paginate(10);
+            ->paginate($perPage)
+            ->appends($request->query()); 
 
         return response()->json($tenders);
     }
 
-public function filter(TenderFilterRequest $request) 
-{
-    $query = Tender::query(); 
-     
     
-    $query->when($request->category, function($q, $v){
-        $categories = is_array($v) ? $v : explode(',', $v); 
-        $q->whereIn('category', $categories);
-    });
+    public function filter(TenderFilterRequest $request) 
+    {
+        $query = Tender::query(); 
+
+        $perPage = $request->query('per_page', 10);
+         
       
-    
-    $query->when($request->region, function ($q, $v){
-        $regions = is_array($v) ? $v : explode(',', $v);
-        $q->where(function ($subQuery) use ($regions){
-            foreach ($regions as $region) {
-                $subQuery->orWhere('location', 'like', "%" . trim($region) . "%");
-            }
+        $query->when($request->category, function($q, $v){
+            $categories = is_array($v) ? $v : explode(',', $v); 
+            $q->whereIn('category', $categories);
         });
-    });
-
- 
-    $query->when($request->source, function($q, $v){
-        $sources = is_array($v) ? $v : explode(',', $v);
-        $q->whereIn('source', $sources);
-    });
-
+          
     
-    $query->when($request->min_budget, fn($q, $v) => $q->where('budget', '>=', $v));
-    $query->when($request->max_budget, fn($q, $v) => $q->where('budget', '<=', $v));
+        $query->when($request->region, function ($q, $v){
+            $regions = is_array($v) ? $v : explode(',', $v);
+            $q->where(function ($subQuery) use ($regions){
+                foreach ($regions as $region) {
+                    $subQuery->orWhere('location', 'like', "%" . trim($region) . "%");
+                }
+            });
+        });
 
-    $query->when($request->deadline, fn($q, $v) => $q->whereDate('deadline', $v));
+        $query->when($request->source, function($q, $v){
+            $sources = is_array($v) ? $v : explode(',', $v);
+            $q->whereIn('source', $sources);
+        });
 
-    if ($request->sortOrder) {
-        $direction = ($request->sortOrder === 'highest') ? 'desc' : 'asc';
-        $query->orderBy('budget', $direction);
-    } else {
-        $query->latest();
+        
+        $query->when($request->min_budget, fn($q, $v) => $q->where('budget', '>=', $v));
+        $query->when($request->max_budget, fn($q, $v) => $q->where('budget', '<=', $v));
+
+        
+        $query->when($request->deadline, fn($q, $v) => $q->whereDate('deadline', $v));
+
+        
+        if ($request->sortOrder) {
+            $direction = ($request->sortOrder === 'highest') ? 'desc' : 'asc';
+            $query->orderBy('budget', $direction);
+        } else {
+            $query->latest();
+        }
+
+        return response()->json(
+            $query->paginate($perPage)->appends($request->query())
+        );
     }
-
-    return response()->json(
-        $query->paginate(10)->appends($request->query())
-    );
-}
-
 
     public function store(Request $request)
     {
@@ -90,10 +100,8 @@ public function filter(TenderFilterRequest $request)
         }
 
         $tender = Tender::create($request->all());
-
         return response()->json(['message' => 'Tender muvaffaqiyatli yaratildi', 'data' => $tender], 201);
     }
-
 
     public function show($id)
     {
@@ -102,7 +110,6 @@ public function filter(TenderFilterRequest $request)
         return response()->json($tender);
     }
 
- 
     public function update(Request $request, $id)
     {
         $tender = Tender::find($id);
@@ -125,7 +132,6 @@ public function filter(TenderFilterRequest $request)
         return response()->json(['message' => 'Tender yangilandi', 'data' => $tender]);
     }
 
-
     public function destroy($id)
     {
         $tender = Tender::find($id);
@@ -147,7 +153,6 @@ public function filter(TenderFilterRequest $request)
         ]);
     }
 
-    
     public function getFavorite(Request $request)
     {
         return response()->json($request->user()->favorites);

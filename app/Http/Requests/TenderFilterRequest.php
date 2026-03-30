@@ -19,7 +19,7 @@ class TenderFilterRequest extends FormRequest
         'closingDate'  => 'nullable|string', 
         'region'       => 'nullable|string',
         'source'       => 'nullable|string',
-        'sortOrder'    => 'nullable|string|in:highest,lowest',
+        'per_page'     => 'nullable|integer|min:1|max:100',
     ];
     }
 }
