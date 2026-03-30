@@ -30,29 +30,45 @@ class TenderController extends Controller
 
 public function filter(TenderFilterRequest $request) 
 {
+    $query = Tender::query(); 
+     
+    
+    $query->when($request->category, function($q, $v){
+        $categories = is_array($v) ? $v : explode(',', $v); 
+        $q->whereIn('category', $categories);
+    });
+      
+    
+    $query->when($request->region, function ($q, $v){
+        $regions = is_array($v) ? $v : explode(',', $v);
+        $q->where(function ($subQuery) use ($regions){
+            foreach ($regions as $region) {
+                $subQuery->orWhere('location', 'like', "%" . trim($region) . "%");
+            }
+        });
+    });
+
+ 
+    $query->when($request->source, function($q, $v){
+        $sources = is_array($v) ? $v : explode(',', $v);
+        $q->whereIn('source', $sources);
+    });
+
+    
+    $query->when($request->min_budget, fn($q, $v) => $q->where('budget', '>=', $v));
+    $query->when($request->max_budget, fn($q, $v) => $q->where('budget', '<=', $v));
+
+    $query->when($request->deadline, fn($q, $v) => $q->whereDate('deadline', $v));
+
+    if ($request->sortOrder) {
+        $direction = ($request->sortOrder === 'highest') ? 'desc' : 'asc';
+        $query->orderBy('budget', $direction);
+    } else {
+        $query->latest();
+    }
+
     return response()->json(
-        Tender::query()
-            ->when($request->category, fn($q, $v) => $q->where('category', $v))
-            ->when($request->region, fn($q, $v) => $q->where('location', 'like', "%$v%"))
-            ->when($request->source, fn($q, $v) => $q->where('source', $v))
-            ->when($request->budgetRange, fn($q, $v) => match ($v) {
-                'under-100k' => $q->where('budget', '<', 100000),
-                '100k-500k'  => $q->whereBetween('budget', [100000, 500000]),
-                'over-500k'  => $q->where('budget', '>', 500000),
-                default      => $q
-            })
-            ->when($request->closingDate, fn($q, $v) => match ($v) {
-                'today'      => $q->whereDate('deadline', now()),
-                'this-week'  => $q->whereBetween('deadline', [now()->startOfWeek(), now()->endOfWeek()]),
-                'this-month' => $q->whereMonth('deadline', now()->month),
-                default      => $q
-            })
-            ->when($request->sortOrder, 
-                fn($q, $v) => $q->orderBy('budget', $v === 'highest' ? 'desc' : 'asc'),
-                fn($q) => $q->latest()
-            )
-            ->paginate(10)
-            ->appends($request->query())
+        $query->paginate(10)->appends($request->query())
     );
 }
 
