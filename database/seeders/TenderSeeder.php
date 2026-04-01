@@ -51,23 +51,24 @@ class TenderSeeder extends Seeder
             ]
         ];
 
-        foreach ($tenders as $data) {
-            
-            $regionId = Region::where('name', $data['region'])->first()?->id ?? 1;
-            $categoryId = Category::where('name', $data['category'])->first()?->id ?? 1;
-            $sourceId = Source::where('name', $data['source'])->first()?->id ?? 1;
+       foreach ($tenders as $data) {
+    $region = Region::firstOrCreate(['name' => $data['region']]);
+    
+    $category = Category::firstOrCreate(['name' => $data['category']]);
+    
+    $source = Source::firstOrCreate(['name' => $data['source']]);
 
-            for ($i = 0; $i < 3; $i++) {
-                Tender::create([
-                    'title' => $data['title'],
-                    'description' => $data['description'],
-                    'budget' => $data['budget'],
-                    'deadline' => $data['deadline'],
-                    'region_id' => $regionId,
-                    'category_id' => $categoryId,
-                    'source_id' => $sourceId,
-                ]);
-            }
-        }
+    for ($i = 0; $i < 3; $i++) {
+        Tender::create([
+            'title' => $data['title'] . " ($i)", 
+            'description' => $data['description'],
+            'budget' => $data['budget'],
+            'deadline' => $data['deadline'],
+            'region_id' => $region->id,
+            'category_id' => $category->id,
+            'source_id' => $source->id,
+        ]);
+    }
+}
     }
 }
