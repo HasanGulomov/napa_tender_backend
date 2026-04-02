@@ -48,31 +48,33 @@ class TenderController extends Controller
      * Yangi tender yaratish
      */
     public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'title'       => 'required|string|max:255',
-            'description' => 'required|string',
-            'category_id' => 'required|integer|exists:categories,id',
-            'region_id'   => 'required|integer|exists:regions,id',
-            'source_id'   => 'required|integer|exists:sources,id',
-            'deadline'    => 'required|date',
-            'budget'      => 'required|numeric',
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'title' => 'required|string|max:255',
+        'description' => 'required|string',
+        'category_id' => 'required|integer|exists:categories,id', 
+        'region_id' => 'required|integer|exists:regions,id',
+        'source_id' => 'required|integer|exists:sources,id',
+        'deadline' => 'required|date',
+        'budget' => 'required|numeric',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        
-
-        // Ma'lumotni yaratish
-        $tender = Tender::create($request->all());
-
-        return response()->json([
-            'message' => 'Tender muvaffaqiyatli yaratildi',
-            'data' => $tender->load(['category', 'region', 'source'])
-        ], 201);
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
     }
+
+    // 1. Tenderni yaratamiz
+    $tender = Tender::create($request->all());
+
+    // 2. MUHIM: Yaratilgan tenderga bog'liq nomlarni yuklaymiz
+    // Bu qator javobda category_id: 1 emas, balki category: {id: 1, name: "Technology"} chiqishini ta'minlaydi
+    $tender->load(['category', 'region', 'source']);
+
+    return response()->json([
+        'message' => 'Tender muvaffaqiyatli yaratildi', 
+        'data' => $tender 
+    ], 201);
+}
 
     /**
      * Bittadan tender ma'lumotini ko'rish
