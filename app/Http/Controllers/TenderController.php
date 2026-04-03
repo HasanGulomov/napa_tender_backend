@@ -14,43 +14,45 @@ class TenderController extends Controller
     
   public function index(Request $request)
 {
-    // 1. per_page qiymatini olish (default 10)
+
     $perPage = $request->query('per_page', 10);
     
-    // 2. Eager Loading orqali bog'langan jadvallarni (Category, Region, Source) yuklash
-    // Bu qator har bir tender uchun tegishli nomlarni qo'shib beradi
+
     $tenders = Tender::with(['category', 'region', 'source'])
         ->latest()
         ->paginate($perPage);
-    
-    // 3. Javobni qaytarish
+
     return response()->json($tenders);
 }
-    /**
-     * Tenderlarni ID bo'yicha filter qilish
-     */
-    public function filter(TenderFilterRequest $request)
-    {
-        $query = Tender::query();
+    
+  public function filter(TenderFilterRequest $request)
+{
+    $query = Tender::with(['category', 'region', 'source']);
 
-        // Ustozingiz aytganidek ID bilan qidiramiz (Tez va aniq)
-        $query->when($request->category_id, fn($q, $v) => $q->whereIn('category_id', (array)$v));
-        $query->when($request->region_id, fn($q, $v) => $q->whereIn('region_id', (array)$v));
-        $query->when($request->source_id, fn($q, $v) => $q->whereIn('source_id', (array)$v));
+    // IDlar massiv bo'lib kelsa whereIn, bitta bo'lsa where ishlatadi
+    $query->when($request->category_id, fn($q, $v) => $q->whereIn('category_id', (array)$v));
+    $query->when($request->region_id, fn($q, $v) => $q->whereIn('region_id', (array)$v));
+    $query->when($request->source_id, fn($q, $v) => $q->whereIn('source_id', (array)$v));
 
-        $query->when($request->min_budget, fn($q, $v) => $q->where('budget', '>=', $v));
-        $query->when($request->max_budget, fn($q, $v) => $q->where('budget', '<=', $v));
-        $query->when($request->closingDate, fn($q, $v) => $q->whereDate('deadline', $v));
+    // Budget: (int) cast qilish muhim, agar baza string bo'lsa
+    $query->when($request->min_budget, function($q, $v) {
+        $q->whereRaw('CAST(budget AS UNSIGNED) >= ?', [(int)$v]);
+    });
+    
+    $query->when($request->max_budget, function($q, $v) {
+        $q->whereRaw('CAST(budget AS UNSIGNED) <= ?', [(int)$v]);
+    });
 
-        // Natijani olish (Model $with tufayli nomlarni qo'shib beradi)
-        $tenders = $query->latest()->get();
+    // Sana: whereDate aniq formatda tekshiradi (YYYY-MM-DD)
+    $query->when($request->closingDate, function($q, $v) {
+        $q->whereDate('deadline', '=', $v);
+    });
 
-        return response()->json($tenders);
-    }
+    $tenders = $query->latest()->get();
 
-    /**
-     * Yangi tender yaratish
-     */
+    return response()->json($tenders);
+}
+    
     public function store(Request $request)
 {
     $validator = Validator::make($request->all(), [
@@ -67,11 +69,9 @@ class TenderController extends Controller
         return response()->json(['errors' => $validator->errors()], 422);
     }
 
-    // 1. Tenderni yaratamiz
     $tender = Tender::create($request->all());
 
-    // 2. MUHIM: Yaratilgan tenderga bog'liq nomlarni yuklaymiz
-    // Bu qator javobda category_id: 1 emas, balki category: {id: 1, name: "Technology"} chiqishini ta'minlaydi
+
     $tender->load(['category', 'region', 'source']);
 
     return response()->json([
@@ -80,9 +80,7 @@ class TenderController extends Controller
     ], 201);
 }
 
-    /**
-     * Bittadan tender ma'lumotini ko'rish
-     */
+   
     public function show($id)
     {
         $tender = Tender::find($id);
@@ -94,9 +92,6 @@ class TenderController extends Controller
         return response()->json($tender);
     }
 
-    /**
-     * Tender ma'lumotlarini yangilash
-     */
     public function update(Request $request, $id)
     {
         $tender = Tender::find($id);
@@ -127,9 +122,7 @@ class TenderController extends Controller
         ]);
     }
 
-    /**
-     * Tenderni o'chirish
-     */
+
     public function destroy($id)
     {
         $tender = Tender::find($id);
@@ -143,9 +136,7 @@ class TenderController extends Controller
         return response()->json(['message' => 'Tender muvaffaqiyatli o‘chirildi']);
     }
 
-    /**
-     * Qidiruv (Title bo'yicha)
-     */
+
     public function search(Request $request)
     {
         $request->validate(['search' => 'required|string']);
