@@ -9,7 +9,7 @@ class Tender extends Model
 {
     use HasFactory;
 
-    protected $table = 'tenders'; 
+    protected $table = 'tenders';
 
     protected $fillable = [
         'source_id',
@@ -21,17 +21,26 @@ class Tender extends Model
         'deadline'
     ];
 
-    public function category() { return $this->belongsTo(Category::class); }
-public function region() { return $this->belongsTo(Region::class); }
-public function source() { return $this->belongsTo(Source::class); }
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+    public function region()
+    {
+        return $this->belongsTo(Region::class);
+    }
+    public function source()
+    {
+        return $this->belongsTo(Source::class);
+    }
 
     protected $appends = ['is_favorite'];
 
-    public function getIsFavoriteAttribute() 
+    public function getIsFavoriteAttribute()
     {
-       
+
         $user = auth('sanctum')->user();
-        if($user){
+        if ($user) {
             return $this->favoritedBy()->where('user_id', $user->id)->exists();
         }
         return false;

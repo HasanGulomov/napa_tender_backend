@@ -12,8 +12,8 @@ class RegionSeeder extends Seeder
      */
     public function run(): void
     {
-        $regions= ['Toshkent', 'Andijon', 'Buxoro', 'Farg\'ona', 'Jizzax', 'Namangan', 'Navoiy', 'Qashqadaryo', 'Samarqand', 'Sirdaryo', 'Surxondaryo', 'Xorazm'];
-        foreach($regions as $region ) {
+        $regions = ['Toshkent', 'Andijon', 'Buxoro', 'Farg\'ona', 'Jizzax', 'Namangan', 'Navoiy', 'Qashqadaryo', 'Samarqand', 'Sirdaryo', 'Surxondaryo', 'Xorazm'];
+        foreach ($regions as $region) {
             \App\Models\Region::create(['name' => $region]);
         }
     }

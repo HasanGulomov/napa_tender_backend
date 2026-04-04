@@ -12,8 +12,8 @@ class SourceSeeder extends Seeder
      */
     public function run(): void
     {
-        $sources= ['UZEX', 'Tender Week', 'IT Market', 'XT-Xarid'];
-        foreach($sources as $source ) {
+        $sources = ['UZEX', 'Tender Week', 'IT Market', 'XT-Xarid'];
+        foreach ($sources as $source) {
             \App\Models\Source::create(['name' => $source]);
         }
     }

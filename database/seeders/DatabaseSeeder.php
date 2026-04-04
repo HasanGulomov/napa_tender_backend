@@ -15,20 +15,20 @@ class DatabaseSeeder extends Seeder
      * Seed the application's database.
      */
     public function run(): void
-{
-    $this->call([
-        RegionSeeder::class,
-        CategorySeeder::class,
-        SourceSeeder::class,
-        TenderSeeder::class, // Agar bo'lsa
-    ]);
+    {
+        $this->call([
+            RegionSeeder::class,
+            CategorySeeder::class,
+            SourceSeeder::class,
+            TenderSeeder::class,
+        ]);
 
-        
 
-      User::create([
+
+        User::create([
             'username'    => 'admin',
             'email'    => 'admin@example.com',
-            'password' => Hash::make('12345678'), 
+            'password' => Hash::make('12345678'),
         ]);
     }
 }

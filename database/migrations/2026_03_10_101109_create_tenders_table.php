@@ -9,23 +9,23 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up(): void
-{
-    Schema::create('tenders', function (Blueprint $table) { 
-        $table->id();
-        $table->string('title');
-        $table->text('description');
-        $table->string('budget');
-        $table->date('deadline');
-        
-        
-        $table->foreignId('region_id')->constrained()->onDelete('cascade');
-        $table->foreignId('source_id')->constrained()->onDelete('cascade');
-        $table->foreignId('category_id')->constrained()->onDelete('cascade');
-        
-        $table->timestamps();
-    });
-}
+    public function up(): void
+    {
+        Schema::create('tenders', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->text('description');
+            $table->string('budget');
+            $table->date('deadline');
+
+
+            $table->foreignId('region_id')->constrained()->onDelete('cascade');
+            $table->foreignId('source_id')->constrained()->onDelete('cascade');
+            $table->foreignId('category_id')->constrained()->onDelete('cascade');
+
+            $table->timestamps();
+        });
+    }
 
     /**
      * Reverse the migrations.

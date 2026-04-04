@@ -13,4 +13,3 @@ class Source extends Model
         return $this->hasMany(Tender::class);
     }
 }
-    
