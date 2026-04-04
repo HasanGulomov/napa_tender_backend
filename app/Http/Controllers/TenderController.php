@@ -25,34 +25,52 @@ class TenderController extends Controller
     return response()->json($tenders);
 }
     
-  public function filter(TenderFilterRequest $request)
-{
-    $query = Tender::with(['category', 'region', 'source']);
+ public function getFilterData()
+    {
+        $budgets = [
+            'min_budget' => (float) Tender::min('budget') ?? 0,
+            'max_budget' => (float) Tender::max('budget') ?? 0,
+        ];
 
-    // IDlar massiv bo'lib kelsa whereIn, bitta bo'lsa where ishlatadi
-    $query->when($request->category_id, fn($q, $v) => $q->whereIn('category_id', (array)$v));
-    $query->when($request->region_id, fn($q, $v) => $q->whereIn('region_id', (array)$v));
-    $query->when($request->source_id, fn($q, $v) => $q->whereIn('source_id', (array)$v));
 
-    // Budget: (int) cast qilish muhim, agar baza string bo'lsa
-    $query->when($request->min_budget, function($q, $v) {
-        $q->whereRaw('CAST(budget AS UNSIGNED) >= ?', [(int)$v]);
-    });
-    
-    $query->when($request->max_budget, function($q, $v) {
-        $q->whereRaw('CAST(budget AS UNSIGNED) <= ?', [(int)$v]);
-    });
+        $deadlines = Tender::whereNotNull('deadline')
+            ->distinct()
+            ->orderBy('deadline', 'asc')
+            ->pluck('deadline');
 
-    // Sana: whereDate aniq formatda tekshiradi (YYYY-MM-DD)
-    $query->when($request->closingDate, function($q, $v) {
-        $q->whereDate('deadline', '=', $v);
-    });
+        return response()->json([
+            'budgets'   => $budgets,
+            'deadlines' => $deadlines,
+        ]);
+    }
 
-    $tenders = $query->latest()->get();
 
-    return response()->json($tenders);
-}
-    
+    public function filter(TenderFilterRequest $request)
+    {
+        $query = Tender::with(['category', 'region', 'source']);
+
+        $query->when($request->category_id, fn($q, $v) => $q->whereIn('category_id', (array)$v));
+        $query->when($request->region_id, fn($q, $v) => $q->whereIn('region_id', (array)$v));
+        $query->when($request->source_id, fn($q, $v) => $q->whereIn('source_id', (array)$v));
+        
+        $query->when($request->filled('min_budget'), function ($q) use ($request) {
+            return $q->where('budget', '>=', (float)$request->min_budget);
+        });
+
+
+        $query->when($request->filled('max_budget'), function ($q) use ($request) {
+            return $q->where('budget', '<=', (float)$request->max_budget);
+        });
+
+
+        $query->when($request->filled('closingDate'), function ($q) use ($request) {
+            return $q->whereDate('deadline', '=', $request->closingDate);
+        });
+
+        $tenders = $query->latest()->get();
+
+        return response()->json($tenders);
+    }
     public function store(Request $request)
 {
     $validator = Validator::make($request->all(), [
