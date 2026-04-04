@@ -26,26 +26,43 @@ class TenderController extends Controller
     {
         $query = Tender::with(['category', 'region', 'source']);
 
-        $query->when($request->category_id, fn($q, $v) => $q->whereIn('category_id', (array)$v));
-        $query->when($request->region_id, fn($q, $v) => $q->whereIn('region_id', (array)$v));
-        $query->when($request->source_id, fn($q, $v) => $q->whereIn('source_id', (array)$v));
+        $query->when(
+            !empty($request->category_id),
+            fn($q) =>
+            $q->whereIn('category_id', (array)$request->category_id)
+        );
 
-        $query->when($request->filled('min_budget'), function ($q) use ($request) {
-            return $q->where('budget', '>=', (float)$request->min_budget);
-        });
+        $query->when(
+            !empty($request->region_id),
+            fn($q) =>
+            $q->whereIn('region_id', (array)$request->region_id)
+        );
 
-        $query->when($request->filled('max_budget'), function ($q) use ($request) {
-            return $q->where('budget', '<=', (float)$request->max_budget);
-        });
+        $query->when(
+            !empty($request->source_id),
+            fn($q) =>
+            $q->whereIn('source_id', (array)$request->source_id)
+        );
 
+        $query->when(
+            $request->has('min_budget'),
+            fn($q) =>
+            $q->where('budget', '>=', (float)$request->min_budget)
+        );
 
-        $query->when($request->filled('closingDate'), function ($q) use ($request) {
-            return $q->whereDate('deadline', '<=', $request->closingDate);
-        });
+        $query->when(
+            $request->has('max_budget'),
+            fn($q) =>
+            $q->where('budget', '<=', (float)$request->max_budget)
+        );
 
-        $tenders = $query->latest()->get();
+        $query->when(
+            $request->closingDate,
+            fn($q) =>
+            $q->whereDate('deadline', '<=', \Carbon\Carbon::parse($request->closingDate))
+        );
 
-        return TenderResource::collection($tenders);
+        return TenderResource::collection($query->latest()->get());
     }
 
 
