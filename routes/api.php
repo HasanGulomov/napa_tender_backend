@@ -27,16 +27,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/update', [AuthController::class, 'update']);
     Route::delete('/user/delete', [AuthController::class, 'delete']);
 
-
     Route::get('/regions', fn() => response()->json(Region::all()));
     Route::get('/sources', fn() => response()->json(Source::all()));
     Route::get('/categories', fn() => response()->json(Category::all()));
 
-
     Route::post('/tenders', [TenderController::class, 'store'])->name('tenders.store');
-    Route::put('/tenders/{id}', [TenderController::class, 'update'])->name('tenders.update');
-    Route::delete('/tenders/{id}', [TenderController::class, 'destroy'])->name('tenders.destroy');
-
 
     Route::post('/tender/{id}/favorite', [TenderController::class, 'toggleFavorite'])->name('tenders.favorite.toggle');
     Route::get('/favorites', [TenderController::class, 'getFavorite'])->name('tenders.favorite.list');

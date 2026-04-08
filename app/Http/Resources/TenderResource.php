@@ -15,8 +15,6 @@ class TenderResource extends JsonResource
             'description' => $this->description,
             'budget' => (float) $this->budget,
             'deadline' => $this->deadline,
-
-            // Har doim OBYEKT qaytadi, null bo'lsa ham struktura buzilmaydi
             'category' => [
                 'id' => $this->category_id,
                 'name' => $this->category?->name ?? 'Noma’lum',
@@ -30,7 +28,6 @@ class TenderResource extends JsonResource
                 'name' => $this->source?->name ?? 'Noma’lum',
             ],
 
-            // Front-endchi so'ragan "tayyor" maydonlar
             'category_name' => $this->category?->name ?? 'Noma’lum',
             'region_name'   => $this->region?->name ?? 'Noma’lum',
             'source_name'   => $this->source?->name ?? 'Noma’lum',
