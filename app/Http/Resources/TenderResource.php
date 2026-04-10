@@ -16,15 +16,15 @@ class TenderResource extends JsonResource
             'budget' => (float) $this->budget,
             'deadline' => $this->deadline,
             'category' => [
-                'id' => $this->category_id,
+                'id' => $this->categoryId,
                 'name' => $this->category?->name ?? 'Noma’lum',
             ],
             'region' => [
-                'id' => $this->region_id,
+                'id' => $this->regionId,
                 'name' => $this->region?->name ?? 'Noma’lum',
             ],
             'source' => [
-                'id' => $this->source_id,
+                'id' => $this->sourceId,
                 'name' => $this->source?->name ?? 'Noma’lum',
             ],
 

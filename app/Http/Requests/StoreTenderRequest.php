@@ -20,16 +20,31 @@ class StoreTenderRequest extends FormRequest
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
+    // StoreTenderRequest.php ichida
+
     public function rules(): array
     {
         return [
-            'title' => 'required|string|max:255',
+            'title'       => 'required|string|max:255',
             'description' => 'required|string',
-            'category_id' => 'required|integer|exists:categories,id',
-            'region_id' => 'required|integer|exists:regions,id',
-            'source_id' => 'required|integer|exists:sources,id',
-            'deadline' => 'required|date',
-            'budget' => 'required|numeric',
+            'categoryId'  => 'required|integer|exists:categories,id',
+            'regionId'    => 'required|integer|exists:regions,id',
+            'sourceId'    => 'required|integer|exists:sources,id',
+            'deadline'    => 'required|date',
+            'budget'      => 'required|numeric',
+
+            'category_id' => 'nullable',
+            'region_id'   => 'nullable',
+            'source_id'   => 'nullable',
         ];
+    }
+
+    protected function passedValidation()
+    {
+        $this->merge([
+            'category_id' => $this->categoryId,
+            'region_id'   => $this->regionId,
+            'source_id'   => $this->sourceId,
+        ]);
     }
 }

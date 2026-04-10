@@ -16,16 +16,12 @@ class TenderRepository
             });
         });
 
-        $query->when(!empty($params['category_id']), fn($q) => $q->whereIn('category_id', (array)$params['category_id']));
-        $query->when(!empty($params['region_id']), function ($q) use ($params) {
-            $q->whereIn('region_id', (array)$params['region_id']);
-        });
-        $query->when(!empty($params['source_id']), function ($q) use ($params) {
-            $q->whereIn('source_id', (array)$params['source_id']);
-        });
+        $query->when(!empty($params['categoryId']), fn($q) => $q->whereIn('categoryId', (array)$params['categoryId']));
+        $query->when(!empty($params['regionId']), fn($q) =>  $q->whereIn('regionId', (array)$params['regionId']));
+        $query->when(!empty($params['sourceId']), fn($q) =>  $q->whereIn('sourceId', (array)$params['sourceId']));
 
-        $query->when(isset($params['min_budget']), fn($q) => $q->where('budget', '>=', (float)$params['min_budget']));
-        $query->when(isset($params['max_budget']), fn($q) => $q->where('budget', '<=', (float)$params['max_budget']));
+        $query->when(isset($params['minBudget']), fn($q) => $q->where('budget', '>=', (float)$params['minBudget']));
+        $query->when(isset($params['maxBudget']), fn($q) => $q->where('budget', '<=', (float)$params['maxBudget']));
 
         $query->when(!empty($params['closingDate']), fn($q) => $q->whereDate('deadline', $params['closingDate']));
 
@@ -39,8 +35,8 @@ class TenderRepository
             'regions'    => Region::all(),
             'sources'    => Source::all(),
             'budgets'    => [
-                'min_budget' => (float) Tender::min('budget') ?: 0,
-                'max_budget' => (float) Tender::max('budget') ?: 0,
+                'minBudget' => (float) Tender::min('budget') ?: 0,
+                'maxBudget' => (float) Tender::max('budget') ?: 0,
             ],
             'deadlines'  => Tender::whereNotNull('deadline')->distinct()->pluck('deadline')
         ];

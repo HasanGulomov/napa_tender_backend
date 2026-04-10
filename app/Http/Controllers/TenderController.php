@@ -34,8 +34,13 @@ class TenderController extends Controller
 
     public function store(StoreTenderRequest $request)
     {
-        $tender = $this->service->store($request->validated());
-        return response()->json(['message' => 'Muvaffaqiyatli yaratildi', 'data' => new TenderResource($tender)], 201);
+
+        $tender = $this->service->store($request->all());
+
+        return response()->json([
+            'message' => 'Muvaffaqiyatli yaratildi',
+            'data' => new TenderResource($tender)
+        ], 201);
     }
 
     public function show($id)
