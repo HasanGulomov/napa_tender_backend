@@ -33,12 +33,19 @@ class TenderService
         return $this->repo->create($data);
     }
 
+
+
     public function toggleFavorite($user, $id)
     {
         $tender = $this->repo->findById($id);
-        if (!$tender) return null;
-
+        if (!$tender) {
+            return null;
+        }
+        if (!$user || !method_exists($user, 'favorites')) {
+            return null;
+        }
         $status = $user->favorites()->toggle($id);
+
         return count($status['attached']) > 0;
     }
 }

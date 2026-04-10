@@ -2,94 +2,67 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Services\AuthService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    protected $service;
+
+    public function __construct(AuthService $service)
+    {
+        $this->service = $service;
+    }
 
     public function register(Request $request)
     {
-        $request->validate([
-            'username' => 'required|string',
-            'email'    => 'required|string|email|unique:users,email',
+        $data = $request->validate([
+            'username' => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
         ]);
 
-        $user = User::create([
-            'username' => $request->username,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-
-        return response()->json([
-            'message' => 'Muvaffaqiyatli ro‘yxatdan o‘tdingiz',
-            'token'   => $user->createToken('auth_token')->plainTextToken,
-            'user'    => $user
-        ], 201);
+        $result = $this->service->register($data);
+        return response()->json(['message' => 'Ro‘yxatdan o‘tdingiz', 'data' => $result], 201);
     }
-
 
     public function login(Request $request)
     {
-        $request->validate([
-            'email'    => 'required|string|email',
-            'password' => 'required|string',
+        $data = $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required',
         ]);
 
+        $result = $this->service->login($data);
 
-        $user = User::where('email', $request->email)->first();
-
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Email, yoki parol xato!'], 401);
+        if (!$result) {
+            return response()->json(['message' => 'Email yoki parol xato!'], 401);
         }
 
-        return response()->json([
-            'message' => 'Xush kelibsiz!',
-            'token'   => $user->createToken('auth_token')->plainTextToken,
-            'user'    => $user
-        ]);
+        return response()->json(['message' => 'Xush kelibsiz!', 'data' => $result]);
     }
-
 
     public function update(Request $request)
     {
         $user = $request->user();
 
-        $request->validate([
-            'username' => 'string|max:255',
-            'email'    => 'string|email|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:6|confirmed',
+        $data = $request->validate([
+            'username' => 'sometimes|string|max:255',
+            'email'    => 'sometimes|email|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:6',
         ]);
 
-        $user->username = $request->username ?? $user->username;
-        $user->email = $request->email ?? $user->email;
-
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
-        }
-
-        $user->save();
+        $updatedUser = $this->service->updateProfile($user, $data);
 
         return response()->json([
-            'message' => 'Ma’lumotlar muvaffaqiyatli yangilandi',
-            'user'    => $user
+            'message' => 'Ma’lumotlar yangilandi',
+            'user'    => $updatedUser
         ]);
     }
 
-
     public function delete(Request $request)
     {
-        $user = $request->user();
-
-
-        $user->tokens()->delete();
-        $user->delete();
-
-        return response()->json([
-            'message' => 'Akkaunt o‘chirildi'
-        ], 200);
+        $this->service->deleteAccount($request->user());
+        return response()->json(['message' => 'Akkaunt o‘chirildi']);
     }
 }
